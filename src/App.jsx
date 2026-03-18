@@ -1,3 +1,5 @@
+import { useRef, useState } from 'react';
+import emailjs from '@emailjs/browser';
 import {
   FiArrowUpRight,
   FiCode,
@@ -7,6 +9,10 @@ import {
   FiLayers,
   FiZap,
 } from 'react-icons/fi';
+
+const EMAILJS_SERVICE_ID  = 'service_1pd4n7x';
+const EMAILJS_TEMPLATE_ID = 'template_jx0q73q';
+const EMAILJS_PUBLIC_KEY  = 'hGnZyhAyJLC0hLk9V';
 
 const strengths = [
   {
@@ -79,6 +85,26 @@ const featuredProjects = [
 ];
 
 function App() {
+  const formRef = useRef(null);
+  const [status, setStatus] = useState('idle'); // idle | sending | success | error
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStatus('sending');
+    try {
+      await emailjs.sendForm(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        formRef.current,
+        EMAILJS_PUBLIC_KEY,
+      );
+      setStatus('success');
+      formRef.current.reset();
+    } catch {
+      setStatus('error');
+    }
+  };
+
   return (
     <div className="page-shell">
       <header className="hero-card">
@@ -206,29 +232,80 @@ function App() {
         </section>
 
         <section className="section-block contact-card" id="contact">
-          <div>
+          <div className="contact-header">
             <p className="eyebrow">CONTACT</p>
             <h2>モダンなプロダクトを、一緒に形にしませんか？</h2>
             <p>
               新規開発、リニューアル、技術選定、チーム立ち上げなど、幅広いテーマで伴走できます。
             </p>
+            <div className="contact-links">
+              <a href="https://github.com/Naoto3615" target="_blank" rel="noreferrer">
+                GitHub <FiArrowUpRight />
+              </a>
+            </div>
           </div>
-          <div className="contact-links">
-            <a href="mailto:hello@example.com">hello@example.com</a>
-            <a href="https://github.com" target="_blank" rel="noreferrer">
-              GitHub <FiArrowUpRight />
-            </a>
-          </div>
+
+          <form ref={formRef} className="contact-form" onSubmit={handleSubmit} noValidate>
+            <div className="form-group">
+              <label htmlFor="from_name">お名前</label>
+              <input
+                id="from_name"
+                name="from_name"
+                type="text"
+                placeholder="山田 太郎"
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="reply_to">メールアドレス</label>
+              <input
+                id="reply_to"
+                name="reply_to"
+                type="email"
+                placeholder="your@email.com"
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="subject">件名</label>
+              <input
+                id="subject"
+                name="subject"
+                type="text"
+                placeholder="プロジェクトのご相談"
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="message">メッセージ</label>
+              <textarea
+                id="message"
+                name="message"
+                rows={5}
+                placeholder="お気軽にご連絡ください。"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="primary-button submit-btn"
+              disabled={status === 'sending'}
+            >
+              {status === 'sending' ? '送信中...' : '送信する'}
+            </button>
+
+            {status === 'success' && (
+              <p className="form-feedback success">送信しました。折り返しご連絡します！</p>
+            )}
+            {status === 'error' && (
+              <p className="form-feedback error">送信に失敗しました。時間をおいて再度お試しください。</p>
+            )}
+          </form>
         </section>
       </main>
 
-      <footer className="site-footer">
-        <p>Built with React / Vite</p>
-        <div className="footer-icons">
-          <FiCpu />
-          <FiDatabase />
-        </div>
-      </footer>
+
     </div>
   );
 }
